@@ -50,7 +50,7 @@ const registerUser =  asyncHandler(async (req, res) => {
 
         if (user) {
             const {_id, name, email, photo, phone, bio, token } = user
-            res.status(201).json({
+            res.status(200).json({
                 _id, name, email, photo, phone, bio, token,
             });
         }  else {
@@ -90,7 +90,6 @@ const getAllUsers = asyncHandler(async (req,res) => {
     }
 });
 
-// 
 // LOgin user
 const loginUser = asyncHandler(async (req,res) => {
 
@@ -116,7 +115,7 @@ const loginUser = asyncHandler(async (req,res) => {
     const passwordIsCorrect = await bcrypt.compare(password, user.password);
 
     if (user && passwordIsCorrect) {
-        const {_id, name, email, photo, phone, bio } = user
+        const {_id, name, email, photo, phone, bio, token} = user
         res.status(200).json({
             _id, name, email, photo, phone, bio, token,
         });
@@ -126,9 +125,21 @@ const loginUser = asyncHandler(async (req,res) => {
     }
 });
 
+const logout = asyncHandler(async (req,res) => {
+    res.cookie("token", "", {
+        path: "/",
+        httpOnly: true,
+        expires: new Date(0), 
+        sameSite: "none",
+        secure: true
+    });
+    return res.status(200).json({message: "Succesfuly Loged Out"});
+});
+
 module.exports ={
     registerUser,
     loginUser,
     getUserByID,
-    getAllUsers
+    getAllUsers,
+    logout,
 };

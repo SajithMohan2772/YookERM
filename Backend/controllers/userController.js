@@ -50,7 +50,7 @@ const registerUser =  asyncHandler(async (req, res) => {
 
         if (user) {
             const {_id, name, email, photo, phone, bio, token } = user
-            res.status(200).json({
+            res.status(201).json({
                 _id, name, email, photo, phone, bio, token,
             });
         }  else {
@@ -61,34 +61,36 @@ const registerUser =  asyncHandler(async (req, res) => {
 });
 
 
-const getUserByID = asyncHandler(async (req,res) => {
-    const userId = req.params.id;
+// const getUserByID = asyncHandler(async (req,res) => {
+//     const userId = req.params.id;
 
-    try {
-        // Fetch the user from the database using the userId
-        const user = await User.findById(userId);
+//     try {
+//         // Fetch the user from the database using the userId
+//         const user = await User.findById(userId);
     
-    if (!user) {
-        // If user not found, return a 404 status and a corresponding message
-        res.status(404).json({ message: 'User not found' });
-    } else {
-        // If user found, return the user data
-        res.status(200).json(user);
-    }
-    } catch (error) {
-    // If an error occurs during database query or processing, return a 500 status and the error message
-    res.status(500).json({ message: error.message });
-    }
-});
+//     if (!user) {
+//         // If user not found, return a 404 status and a corresponding message
+//         res.status(404).json({ message: 'User not found' });
+//     } else {
+//         // If user found, return the user data
+//         res.status(200).json(user);
+//     }
+//     } catch (error) {
+//     // If an error occurs during database query or processing, return a 500 status and the error message
+//     res.status(500).json({ message: error.message });
+//     }
+// });
 
-const getAllUsers = asyncHandler(async (req,res) => {
-    try {
-        const users = await User.find(); // Fetch all users from the database
-        res.status(200).json(users); // Return users as JSON response
-    } catch (error) {
-        res.status(500).json({ message: 'Internal server error' });
-    }
-});
+// const getUserByID = asyncHandler(async (req,res) => {})
+
+// const getAllUsers = asyncHandler(async (req,res) => {
+//     try {
+//         const users = await User.find(); // Fetch all users from the database
+//         res.status(200).json(users); // Return users as JSON response
+//     } catch (error) {
+//         res.status(500).json({ message: 'Internal server error' });
+//     }
+// });
 
 // LOgin user
 const loginUser = asyncHandler(async (req,res) => {
@@ -114,6 +116,18 @@ const loginUser = asyncHandler(async (req,res) => {
 
     const passwordIsCorrect = await bcrypt.compare(password, user.password);
 
+      //   Generate Token
+    const token = generateToken(user._id);
+
+    // Send HTTP-only cookie
+    res.cookie("token", token, {
+    path: "/",
+    httpOnly: true,
+      expires: new Date(Date.now() + 1000 * 86400), // 1 day
+    sameSite: "none",
+    secure: true,
+    });
+
     if (user && passwordIsCorrect) {
         const {_id, name, email, photo, phone, bio, token} = user
         res.status(200).json({
@@ -125,6 +139,9 @@ const loginUser = asyncHandler(async (req,res) => {
     }
 });
 
+
+
+// logout user
 const logout = asyncHandler(async (req,res) => {
     res.cookie("token", "", {
         path: "/",
@@ -136,10 +153,28 @@ const logout = asyncHandler(async (req,res) => {
     return res.status(200).json({message: "Succesfuly Loged Out"});
 });
 
+
+
+// Get user data
+const getUser =asyncHandler(async (req, res) => {
+    const user = await User.findById(req.user._id);
+
+    if (user) {
+        const {_id, name, email, photo, phone, bio, } = user;
+        res.status(200).json({
+            _id, name, email, photo, phone, bio,
+        });
+    } else {
+        res.status(400);
+        throw new Error("user not found");
+    }
+});
+
 module.exports ={
     registerUser,
     loginUser,
-    getUserByID,
-    getAllUsers,
+    // getUserByID,
+    // getAllUsers,
     logout,
+    getUser,
 };

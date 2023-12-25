@@ -111,7 +111,6 @@ const loginUser = asyncHandler(async (req,res) => {
     }
 });
 
-
 // logout user
 const logout = asyncHandler(async (req,res) => {
     res.cookie("token", "", {
@@ -123,7 +122,6 @@ const logout = asyncHandler(async (req,res) => {
     });
     return res.status(200).json({message: "Succesfuly Loged Out"});
 });
-
 
 // Get user data
 const getUser = asyncHandler(async (req, res) => {
@@ -139,7 +137,6 @@ const getUser = asyncHandler(async (req, res) => {
         throw new Error("user not found");
     }
 });
-
 
 // Get Login Status
 const loginStatus = asyncHandler(async (req, res) => {
@@ -219,16 +216,23 @@ const changePassword = asyncHandler(async (req, res) => {
 
 // Forgot password
 const forgotPassword = asyncHandler(async (req, res) => {
-const {email} = req.body
-const user = await User.findOne({email})
+const {email} = req.body;
+const user = await User.findOne({email});
 
 if (!user) {
     res.send(404)
     throw new Error("User not found")
 } 
+
+// Delete token if it exists in DB
+let token = await Token.findOne({ userId: user._id });
+if (token) {
+await token.deleteOne();
+}
+
 // Create reset token
 let resetToken = crypto.randomBytes(32).toString("hex") + user._id;
-
+console.log(resetToken);
 
 // Hash token before saving to DB
 const hashedToken =crypto
@@ -264,11 +268,11 @@ const message = `
     const send_from = process.env.EMAIL_USER
 
     try {
-        await sendEmail(subject, message, send_to, send_from)
-        res.status(200).json({success: true, message:"Reset email sent"})
+        await sendEmail(subject, message, send_to, send_from);
+        res.status(200).json({success: true, message:"Reset email sent"});
     } catch (error) {
         res.status(500)
-        throw new Error("Email not sent, please try again")
+        throw new Error("Email not sent, please try again");
     }
 });
 
@@ -293,6 +297,8 @@ const resetPassword = asyncHandler(async (req, res) => {
     res.status(404);
     throw new Error("Invalid or Expired Token");
     }
+    
+    
 
     // Find user
     const user = await User.findOne({ _id: userToken.userId });

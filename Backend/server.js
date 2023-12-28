@@ -23,7 +23,7 @@ app.use(cors());
 // Routes middleWare
 app.use('/api/users', userRoute);
 app.use("/api/products", productRoute);
-app.use("/api/contactus", contactRoute);
+app.use("/api/contacts", contactRoute);
 
 // Routes
 app.get("/", (request, response) => {
